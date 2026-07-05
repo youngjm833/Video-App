@@ -37,6 +37,8 @@ export interface Segment {
   duration: number
   /** Playback speed multiplier: 0.5 = slow motion, 2 = sped up. */
   speed: number
+  /** Why the director chose this moment (shown in the timeline tooltip). */
+  note?: string
 }
 
 export interface EditPlan {

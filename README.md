@@ -31,7 +31,10 @@ interface EditDirector {
 }
 ```
 
-The current implementation (`src/director/heuristic.ts`) is an **offline heuristic mock**: it parses the prompt with keyword rules, selects segments spread across the footage, and writes up its reasoning. When an Anthropic API key is available, a Claude-backed director — which can additionally *look at* sampled frames to pick the best moments — implements the same interface and drops in without changing the UI or renderer.
+Two implementations ship with the app; the active one is shown in the header badge:
+
+- **Claude Director** (`src/director/claude.ts`) — used automatically when an Anthropic API key is set in **Settings** (⚙). It samples frames from each clip at known timestamps, sends them to Claude (`claude-opus-4-8`, adaptive thinking) together with your brief, and receives a schema-validated edit plan via structured outputs. Because Claude *sees* the footage, it trims around the strongest moments instead of cutting blindly. Plans are sanitized before rendering (segments clamped to real clip bounds, speeds to 0.5–2×, unknown clips dropped). Get a key at [console.anthropic.com](https://console.anthropic.com) — the key is stored in your browser's localStorage and sent directly to the Anthropic API, which is fine for personal use; put a small backend in front before sharing the app with others.
+- **Heuristic Director** (`src/director/heuristic.ts`) — the offline fallback when no key is set. It parses the prompt with keyword rules and spreads segments evenly across the footage, so the full pipeline works without any account.
 
 ## Getting started
 
@@ -55,7 +58,7 @@ Then open the printed local URL (default `http://localhost:5173`).
 
 ```
 src/
-  director/       Edit-planning AI (heuristic mock behind the EditDirector interface)
+  director/       Edit-planning AI: Claude director + offline heuristic (EditDirector interface)
   render/         ffmpeg.wasm engine: filtergraph builder, title cards, renderer
   components/     UI: UploadZone, ClipList, PromptPanel, PlanView, RenderPanel
   utils/          Clip metadata/thumbnails, formatting helpers

@@ -8,10 +8,7 @@ import type {
   Pacing,
   Segment,
 } from '../types'
-
-const LANDSCAPE: OutputFormat = { width: 1280, height: 720, fps: 30, aspectLabel: '16:9 landscape' }
-const PORTRAIT: OutputFormat = { width: 720, height: 1280, fps: 30, aspectLabel: '9:16 vertical' }
-const SQUARE: OutputFormat = { width: 720, height: 720, fps: 30, aspectLabel: '1:1 square' }
+import { LANDSCAPE, PORTRAIT, SQUARE } from './formats'
 
 /** Average trimmed-segment length in seconds for each pacing. */
 const SEGMENT_LENGTH: Record<Pacing, number> = { fast: 2, medium: 4, slow: 6.5 }

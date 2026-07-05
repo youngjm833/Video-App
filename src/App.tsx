@@ -1,19 +1,34 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ClipList } from './components/ClipList'
 import { Header } from './components/Header'
 import { PlanView } from './components/PlanView'
 import { PromptPanel } from './components/PromptPanel'
 import { RenderPanel } from './components/RenderPanel'
+import { SettingsPanel } from './components/SettingsPanel'
 import { UploadZone } from './components/UploadZone'
+import { createClaudeDirector } from './director/claude'
 import { heuristicDirector } from './director/heuristic'
 import { renderPlan, type RenderProgress } from './render/renderPlan'
 import type { Clip, EditPlan } from './types'
 import { fileToClip, loadSampleFootage } from './utils/clips'
 
-const director = heuristicDirector
+const API_KEY_STORAGE = 'videoapp.anthropic-api-key'
 
 export default function App() {
   const [clips, setClips] = useState<Clip[]>([])
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem(API_KEY_STORAGE) ?? '')
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const director = useMemo(
+    () => (apiKey ? createClaudeDirector(apiKey) : heuristicDirector),
+    [apiKey],
+  )
+
+  const saveApiKey = (key: string) => {
+    setApiKey(key)
+    if (key) localStorage.setItem(API_KEY_STORAGE, key)
+    else localStorage.removeItem(API_KEY_STORAGE)
+  }
   const [loadingSamples, setLoadingSamples] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [thinking, setThinking] = useState(false)
@@ -94,7 +109,14 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header />
+      <Header
+        directorName={director.name}
+        directorIsAI={Boolean(apiKey)}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
+      {settingsOpen && (
+        <SettingsPanel apiKey={apiKey} onSave={saveApiKey} onClose={() => setSettingsOpen(false)} />
+      )}
       <main className="app__content">
         <section className="step">
           <h2 className="step__title">
