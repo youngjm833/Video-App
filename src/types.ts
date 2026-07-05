@@ -41,11 +41,25 @@ export interface Segment {
   note?: string
 }
 
+/** How consecutive cuts are joined. */
+export type TransitionType = 'cut' | 'crossfade'
+
+/** A background music track chosen by the user (not the director). */
+export interface MusicTrack {
+  file: File
+  name: string
+  /** Track length in seconds, or null if metadata couldn't be read. */
+  duration: number | null
+  /** Mix volume, 0..1. */
+  volume: number
+}
+
 export interface EditPlan {
   targetDuration: number
   pacing: Pacing
   ordering: Ordering
   output: OutputFormat
+  transitions: TransitionType
   segments: Segment[]
   filters: {
     /** Punchy contrast/saturation grade. */

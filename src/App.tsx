@@ -6,10 +6,11 @@ import { PromptPanel } from './components/PromptPanel'
 import { RenderPanel } from './components/RenderPanel'
 import { SettingsPanel } from './components/SettingsPanel'
 import { UploadZone } from './components/UploadZone'
+import { MusicPanel } from './components/MusicPanel'
 import { createClaudeDirector } from './director/claude'
 import { heuristicDirector } from './director/heuristic'
 import { renderPlan, type RenderProgress } from './render/renderPlan'
-import type { Clip, EditPlan } from './types'
+import type { Clip, EditPlan, MusicTrack } from './types'
 import { fileToClip, loadSampleFootage } from './utils/clips'
 
 const API_KEY_STORAGE = 'videoapp.anthropic-api-key'
@@ -34,6 +35,7 @@ export default function App() {
   const [thinking, setThinking] = useState(false)
   const [plan, setPlan] = useState<EditPlan | null>(null)
   const [planError, setPlanError] = useState<string | null>(null)
+  const [music, setMusic] = useState<MusicTrack | null>(null)
   const [renderStatus, setRenderStatus] = useState<'idle' | 'rendering' | 'done' | 'error'>('idle')
   const [progress, setProgress] = useState<RenderProgress | null>(null)
   const [outputUrl, setOutputUrl] = useState<string | null>(null)
@@ -90,8 +92,7 @@ export default function App() {
   }
 
   // Edits invalidate a finished render: clear the stale output.
-  const updatePlan = (next: EditPlan) => {
-    setPlan(next)
+  const clearStaleOutput = () => {
     if (renderStatus !== 'idle' && renderStatus !== 'rendering') {
       setRenderStatus('idle')
       if (outputUrl) {
@@ -99,6 +100,16 @@ export default function App() {
         setOutputUrl(null)
       }
     }
+  }
+
+  const updatePlan = (next: EditPlan) => {
+    setPlan(next)
+    clearStaleOutput()
+  }
+
+  const updateMusic = (next: MusicTrack | null) => {
+    setMusic(next)
+    clearStaleOutput()
   }
 
   const startRender = async () => {
@@ -110,7 +121,7 @@ export default function App() {
       setOutputUrl(null)
     }
     try {
-      const blob = await renderPlan(plan, clips, setProgress)
+      const blob = await renderPlan(plan, clips, music, setProgress)
       setOutputUrl(URL.createObjectURL(blob))
       setRenderStatus('done')
     } catch (error) {
@@ -162,6 +173,7 @@ export default function App() {
             <h2 className="step__title step__title--spaced">
               <span className="step__number">4</span> Render
             </h2>
+            <MusicPanel music={music} onChange={updateMusic} />
             <RenderPanel
               status={renderStatus}
               progress={progress}

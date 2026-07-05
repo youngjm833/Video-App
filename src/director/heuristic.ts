@@ -50,6 +50,13 @@ function parseOrdering(prompt: string): Ordering {
   return 'sequential'
 }
 
+function parseTransitions(prompt: string): 'cut' | 'crossfade' {
+  if (/(crossfade|cross-fade|dissolve|smooth transitions?|fade between|soft cuts)/i.test(prompt)) {
+    return 'crossfade'
+  }
+  return 'cut'
+}
+
 function parseSpeed(prompt: string): number {
   if (/(slow[- ]?mo(?:tion)?)/i.test(prompt)) return 0.5
   if (/(time[- ]?lapse|speed(?:ed)? up|hyperlapse)/i.test(prompt)) return 2
@@ -173,6 +180,7 @@ function describePlan(
   if (plan.filters.monochrome) effects.push('a black & white treatment')
   if (plan.filters.letterbox) effects.push('cinematic letterbox bars')
   if (effects.length) parts.push(`I applied ${effects.join(', ')}.`)
+  if (plan.transitions === 'crossfade') parts.push('Cuts dissolve into each other with soft crossfades.')
   if (plan.title) parts.push(`The video opens with the title “${plan.title}”.`)
   return parts.join(' ')
 }
@@ -200,6 +208,7 @@ export const heuristicDirector: EditDirector = {
       Math.max(4, Math.round(totalFootage / speed)),
     )
 
+    const transitions = parseTransitions(prompt)
     const segments = pickSegments(clips, targetDuration, pacing, ordering, speed)
     const filters = {
       grade: /(punchy|vibrant|pop|hype|energetic|action)/i.test(prompt),
@@ -208,7 +217,7 @@ export const heuristicDirector: EditDirector = {
     }
     const title = parseTitle(prompt)
 
-    const plan = { targetDuration, pacing, ordering, output, segments, filters, title }
+    const plan = { targetDuration, pacing, ordering, output, transitions, segments, filters, title }
     // Simulate a moment of "thinking" so the UI flow matches a real API call.
     await new Promise((resolve) => setTimeout(resolve, 600))
     return { ...plan, reasoning: describePlan(plan, request, totalFootage) }

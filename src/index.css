@@ -732,6 +732,75 @@ video {
   border-radius: 0 6px 6px 0;
 }
 
+/* Music panel */
+.music-panel {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.music-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.music-panel__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.music-panel__hint {
+  flex: 1;
+  min-width: 200px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.music-panel__track {
+  flex: 1;
+  min-width: 160px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.music-panel__volume {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.music-panel__volume input[type='range'] {
+  width: 120px;
+  accent-color: var(--accent);
+}
+
+.music-panel__volume span {
+  min-width: 2.6rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.plan-view__transitions {
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 /* Render panel */
 .render-panel {
   display: flex;

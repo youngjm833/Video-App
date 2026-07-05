@@ -16,13 +16,15 @@ raw clips  →  "make a fast 30s highlight reel"  →  edit plan  →  rendered 
    - **style** — "cinematic" (letterbox), "black and white", "punchy/vibrant" (color grade)
    - **speed** — "slow motion", "timelapse"
    - **structure** — "montage" (intercut clips), "shuffle", chronological by default
+   - **transitions** — "crossfade", "dissolve", "smooth transitions" (0.5s dissolves between cuts)
    - **title** — `titled "…"` renders an opening title card
 3. **Review and refine the plan** — the director explains its choices and shows the cut timeline, color-coded by source clip. Every cut is editable before you commit to a render:
    - **Preview** any cut — an inline player loops exactly the trimmed window at the cut's speed
    - **Trim** by dragging the edge handles, or slide the whole window along the clip
    - **Reorder** by dragging rows (or the ↑/↓ buttons), **duplicate**, **delete**, or **add** cuts
    - Change a cut's **source clip** or **playback speed** (0.5×–2×)
-4. **Render** — ffmpeg.wasm executes the edit plan client-side and produces a downloadable WebM. Your footage never leaves the browser. Editing the plan after a render clears the stale output so what you download always matches the timeline.
+4. **Add sound** — pick **hard cuts or crossfades** (the director chooses from your prompt; a select in the plan stats overrides it), and optionally add a **soundtrack**: any audio file (or the bundled sample track), mixed under the footage at an adjustable volume, faded in/out, and looped to fit the cut.
+5. **Render** — ffmpeg.wasm executes the edit plan client-side and produces a downloadable WebM. Your footage never leaves the browser. Editing the plan or soundtrack after a render clears the stale output so what you download always matches the timeline. Audio degrades gracefully: source audio + music → music only → silent, whichever first succeeds for your clips.
 
 ## The AI director
 
@@ -74,5 +76,5 @@ public/
 ## Notes
 
 - Rendering uses single-threaded ffmpeg.wasm (~32 MB, loaded once on first render). Short clips render in seconds; long footage takes proportionally longer.
-- Source audio is carried into the edit when every selected clip has an audio track; otherwise the render falls back to video-only.
+- Source audio is carried into the edit when every selected clip has an audio track, and background music is mixed on top when set; the render degrades gracefully (source+music → music only → silent) if an audio graph fails.
 - The bundled sample clips are procedurally generated (fractals, cellular automata, gradients), so the repo is fully self-contained and works offline.

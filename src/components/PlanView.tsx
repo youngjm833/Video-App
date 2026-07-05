@@ -1,6 +1,7 @@
-import type { Clip, EditPlan } from '../types'
+import type { Clip, EditPlan, TransitionType } from '../types'
 import { clipColorMap } from '../utils/clipColors'
 import { formatSeconds } from '../utils/format'
+import { planTiming } from '../utils/plan'
 import { PlanEditor } from './PlanEditor'
 
 interface PlanViewProps {
@@ -13,7 +14,7 @@ interface PlanViewProps {
 export function PlanView({ plan, clips, directorName, onChange }: PlanViewProps) {
   const colorByClip = clipColorMap(clips)
   const nameByClip = new Map(clips.map((clip) => [clip.id, clip.name]))
-  const totalOutput = plan.segments.reduce((sum, s) => sum + s.duration / s.speed, 0)
+  const totalOutput = planTiming(plan).total
 
   return (
     <div className="plan-view">
@@ -66,6 +67,20 @@ export function PlanView({ plan, clips, directorName, onChange }: PlanViewProps)
         <div>
           <dt>Pacing</dt>
           <dd>{plan.pacing}</dd>
+        </div>
+        <div>
+          <dt>Transitions</dt>
+          <dd>
+            <select
+              className="plan-view__transitions"
+              value={plan.transitions}
+              onChange={(e) => onChange({ ...plan, transitions: e.target.value as TransitionType })}
+              aria-label="Transition style"
+            >
+              <option value="cut">Hard cuts</option>
+              <option value="crossfade">Crossfade</option>
+            </select>
+          </dd>
         </div>
         {plan.title && (
           <div>

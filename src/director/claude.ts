@@ -14,12 +14,17 @@ const FALLBACK_CLIP_DURATION = 10
 const EDIT_PLAN_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['targetDuration', 'pacing', 'ordering', 'aspect', 'segments', 'filters', 'title', 'reasoning'],
+  required: ['targetDuration', 'pacing', 'ordering', 'aspect', 'transitions', 'segments', 'filters', 'title', 'reasoning'],
   properties: {
     targetDuration: { type: 'number', description: 'Intended output length in seconds' },
     pacing: { type: 'string', enum: ['fast', 'medium', 'slow'] },
     ordering: { type: 'string', enum: ['sequential', 'interleaved', 'shuffled'] },
     aspect: { type: 'string', enum: ['landscape', 'portrait', 'square'] },
+    transitions: {
+      type: 'string',
+      enum: ['cut', 'crossfade'],
+      description: 'crossfade = 0.5s dissolves between cuts (calm/dreamy briefs); cut = hard cuts (energetic briefs)',
+    },
     segments: {
       type: 'array',
       description: 'The cuts, in final playback order',
@@ -63,7 +68,8 @@ Produce an edit plan: an ordered list of trimmed segments that cuts the raw foot
 
 Editing judgment:
 - Pick the visually strongest moments you can actually see in the frames; use each frame's timestamp to trim around it. Avoid dead, static, or redundant stretches.
-- Honor everything the user specifies (length, pacing, format, style, title, structure); choose tastefully where they are silent.
+- Honor everything the user specifies (length, pacing, format, style, title, structure, transitions); choose tastefully where they are silent.
+- Transitions: pick 'crossfade' for calm, dreamy, or smooth briefs; 'cut' for energetic ones.
 - Vary segment length with pacing: fast ≈ 1.5-3s per cut, medium ≈ 3-5s, slow ≈ 5-8s. The sum of duration/speed should be close to the target duration.
 - Segments must stay within each clip's real duration. Speed must be between 0.5 and 2.
 - Every clip you reference must use its exact "id" value.
@@ -74,6 +80,7 @@ interface RawPlan {
   pacing: EditPlan['pacing']
   ordering: EditPlan['ordering']
   aspect: AspectName
+  transitions: EditPlan['transitions']
   segments: Array<Segment & { note: string }>
   filters: EditPlan['filters']
   title: string | null
@@ -116,6 +123,7 @@ function sanitizePlan(raw: RawPlan, clips: Clip[]): EditPlan {
     pacing: raw.pacing,
     ordering: raw.ordering,
     output,
+    transitions: raw.transitions === 'crossfade' ? 'crossfade' : 'cut',
     segments,
     filters: {
       ...raw.filters,
