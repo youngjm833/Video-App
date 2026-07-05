@@ -89,8 +89,20 @@ export default function App() {
     }
   }
 
+  // Edits invalidate a finished render: clear the stale output.
+  const updatePlan = (next: EditPlan) => {
+    setPlan(next)
+    if (renderStatus !== 'idle' && renderStatus !== 'rendering') {
+      setRenderStatus('idle')
+      if (outputUrl) {
+        URL.revokeObjectURL(outputUrl)
+        setOutputUrl(null)
+      }
+    }
+  }
+
   const startRender = async () => {
-    if (!plan) return
+    if (!plan || plan.segments.length === 0) return
     setRenderStatus('rendering')
     setRenderError(null)
     if (outputUrl) {
@@ -145,7 +157,7 @@ export default function App() {
             <h2 className="step__title">
               <span className="step__number">3</span> Review the edit plan
             </h2>
-            <PlanView plan={plan} clips={clips} directorName={director.name} />
+            <PlanView plan={plan} clips={clips} directorName={director.name} onChange={updatePlan} />
 
             <h2 className="step__title step__title--spaced">
               <span className="step__number">4</span> Render
@@ -155,6 +167,7 @@ export default function App() {
               progress={progress}
               outputUrl={outputUrl}
               error={renderError}
+              canRender={plan.segments.length > 0}
               onRender={startRender}
             />
           </section>

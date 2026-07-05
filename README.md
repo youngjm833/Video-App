@@ -17,8 +17,12 @@ raw clips  →  "make a fast 30s highlight reel"  →  edit plan  →  rendered 
    - **speed** — "slow motion", "timelapse"
    - **structure** — "montage" (intercut clips), "shuffle", chronological by default
    - **title** — `titled "…"` renders an opening title card
-3. **Review the plan** — the director explains its choices and shows the cut timeline, color-coded by source clip.
-4. **Render** — ffmpeg.wasm executes the edit plan client-side and produces a downloadable WebM. Your footage never leaves the browser.
+3. **Review and refine the plan** — the director explains its choices and shows the cut timeline, color-coded by source clip. Every cut is editable before you commit to a render:
+   - **Preview** any cut — an inline player loops exactly the trimmed window at the cut's speed
+   - **Trim** by dragging the edge handles, or slide the whole window along the clip
+   - **Reorder** by dragging rows (or the ↑/↓ buttons), **duplicate**, **delete**, or **add** cuts
+   - Change a cut's **source clip** or **playback speed** (0.5×–2×)
+4. **Render** — ffmpeg.wasm executes the edit plan client-side and produces a downloadable WebM. Your footage never leaves the browser. Editing the plan after a render clears the stale output so what you download always matches the timeline.
 
 ## The AI director
 

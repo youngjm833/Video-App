@@ -1,17 +1,17 @@
 import type { Clip, EditPlan } from '../types'
+import { clipColorMap } from '../utils/clipColors'
 import { formatSeconds } from '../utils/format'
-
-// Segment blocks are tinted by source clip so the timeline shows structure.
-const CLIP_COLORS = ['#ff3d5e', '#3d8bff', '#2ecc8f', '#f5a623', '#b48bff', '#ff7ab8']
+import { PlanEditor } from './PlanEditor'
 
 interface PlanViewProps {
   plan: EditPlan
   clips: Clip[]
   directorName: string
+  onChange: (plan: EditPlan) => void
 }
 
-export function PlanView({ plan, clips, directorName }: PlanViewProps) {
-  const colorByClip = new Map(clips.map((clip, i) => [clip.id, CLIP_COLORS[i % CLIP_COLORS.length]]))
+export function PlanView({ plan, clips, directorName, onChange }: PlanViewProps) {
+  const colorByClip = clipColorMap(clips)
   const nameByClip = new Map(clips.map((clip) => [clip.id, clip.name]))
   const totalOutput = plan.segments.reduce((sum, s) => sum + s.duration / s.speed, 0)
 
@@ -31,9 +31,12 @@ export function PlanView({ plan, clips, directorName }: PlanViewProps) {
               flexGrow: segment.duration / segment.speed,
               background: colorByClip.get(segment.clipId),
             }}
-            title={`${nameByClip.get(segment.clipId)} — ${segment.start.toFixed(1)}s for ${segment.duration.toFixed(1)}s${segment.speed !== 1 ? ` at ${segment.speed}×` : ''}`}
+            title={`${nameByClip.get(segment.clipId)} — ${segment.start.toFixed(1)}s for ${segment.duration.toFixed(1)}s${segment.speed !== 1 ? ` at ${segment.speed}×` : ''}${segment.note ? ` — ${segment.note}` : ''}`}
           />
         ))}
+        {plan.segments.length === 0 && (
+          <span className="plan-view__timeline-empty">No cuts left — add one below.</span>
+        )}
       </div>
 
       <div className="plan-view__legend">
@@ -71,6 +74,8 @@ export function PlanView({ plan, clips, directorName }: PlanViewProps) {
           </div>
         )}
       </dl>
+
+      <PlanEditor plan={plan} clips={clips} onChange={onChange} />
     </div>
   )
 }

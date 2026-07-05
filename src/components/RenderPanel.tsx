@@ -5,14 +5,19 @@ interface RenderPanelProps {
   progress: RenderProgress | null
   outputUrl: string | null
   error: string | null
+  canRender: boolean
   onRender: () => void
 }
 
-export function RenderPanel({ status, progress, outputUrl, error, onRender }: RenderPanelProps) {
+export function RenderPanel({ status, progress, outputUrl, error, canRender, onRender }: RenderPanelProps) {
   return (
     <div className="render-panel">
       {status !== 'rendering' && (
-        <button className="button button--primary button--large" onClick={onRender}>
+        <button
+          className="button button--primary button--large"
+          onClick={onRender}
+          disabled={!canRender}
+        >
           {status === 'done' ? 'Render again' : 'Render video'}
         </button>
       )}

@@ -545,6 +545,193 @@ video {
   font-weight: 600;
 }
 
+.plan-view__timeline-empty {
+  align-self: center;
+  margin: 0 auto;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Plan editor */
+.plan-editor__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.plan-editor__add {
+  margin-top: 0.75rem;
+}
+
+.segment-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: grab;
+}
+
+.segment-row:active {
+  cursor: grabbing;
+}
+
+.segment-row--drop-target {
+  border-color: var(--accent);
+}
+
+.segment-row__grip {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.75);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.segment-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.segment-row__top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.segment-row__clip,
+.segment-row__speed {
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  max-width: 220px;
+}
+
+.segment-row__timing {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.segment-row__timing strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.segment-row__note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.segment-row__preview {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 8px;
+  background: #000;
+}
+
+.segment-row__actions {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  align-content: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  transition: color 0.15s, background 0.15s;
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.icon-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.icon-button--active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.icon-button--danger:hover:not(:disabled) {
+  color: #ff8095;
+  border-color: rgba(255, 61, 94, 0.5);
+}
+
+/* Trim bar */
+.trim-bar {
+  position: relative;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  touch-action: none;
+}
+
+.trim-bar__window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 14px;
+  opacity: 0.85;
+  cursor: grab;
+}
+
+.trim-bar__window:active {
+  cursor: grabbing;
+}
+
+.trim-bar__handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  background: rgba(0, 0, 0, 0.45);
+  cursor: ew-resize;
+}
+
+.trim-bar__handle--left {
+  left: 0;
+  border-radius: 6px 0 0 6px;
+}
+
+.trim-bar__handle--right {
+  right: 0;
+  border-radius: 0 6px 6px 0;
+}
+
 /* Render panel */
 .render-panel {
   display: flex;
