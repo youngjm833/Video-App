@@ -1,73 +1,141 @@
-import { useMemo, useState } from 'react'
-import { CategoryFilter } from './components/CategoryFilter'
+import { useEffect, useRef, useState } from 'react'
+import { ClipList } from './components/ClipList'
 import { Header } from './components/Header'
-import { VideoGrid } from './components/VideoGrid'
-import { VideoPlayer } from './components/VideoPlayer'
-import { videos } from './data/videos'
-import type { CategoryFilterValue, Video } from './types'
+import { PlanView } from './components/PlanView'
+import { PromptPanel } from './components/PromptPanel'
+import { RenderPanel } from './components/RenderPanel'
+import { UploadZone } from './components/UploadZone'
+import { heuristicDirector } from './director/heuristic'
+import { renderPlan, type RenderProgress } from './render/renderPlan'
+import type { Clip, EditPlan } from './types'
+import { fileToClip, loadSampleFootage } from './utils/clips'
+
+const director = heuristicDirector
 
 export default function App() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [category, setCategory] = useState<CategoryFilterValue>('All')
-  const [activeVideo, setActiveVideo] = useState<Video | null>(null)
+  const [clips, setClips] = useState<Clip[]>([])
+  const [loadingSamples, setLoadingSamples] = useState(false)
+  const [prompt, setPrompt] = useState('')
+  const [thinking, setThinking] = useState(false)
+  const [plan, setPlan] = useState<EditPlan | null>(null)
+  const [planError, setPlanError] = useState<string | null>(null)
+  const [renderStatus, setRenderStatus] = useState<'idle' | 'rendering' | 'done' | 'error'>('idle')
+  const [progress, setProgress] = useState<RenderProgress | null>(null)
+  const [outputUrl, setOutputUrl] = useState<string | null>(null)
+  const [renderError, setRenderError] = useState<string | null>(null)
+  const planSection = useRef<HTMLElement>(null)
 
-  const filteredVideos = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
-    return videos.filter((video) => {
-      const matchesCategory = category === 'All' || video.category === category
-      const matchesQuery =
-        query === '' ||
-        video.title.toLowerCase().includes(query) ||
-        video.channel.toLowerCase().includes(query) ||
-        video.description.toLowerCase().includes(query)
-      return matchesCategory && matchesQuery
-    })
-  }, [searchQuery, category])
+  useEffect(() => {
+    return () => {
+      if (outputUrl) URL.revokeObjectURL(outputUrl)
+    }
+  }, [outputUrl])
 
-  const relatedVideos = useMemo(() => {
-    if (!activeVideo) return []
-    const sameCategory = videos.filter(
-      (v) => v.id !== activeVideo.id && v.category === activeVideo.category,
-    )
-    const others = videos.filter(
-      (v) => v.id !== activeVideo.id && v.category !== activeVideo.category,
-    )
-    return [...sameCategory, ...others].slice(0, 6)
-  }, [activeVideo])
-
-  const openVideo = (video: Video) => {
-    setActiveVideo(video)
-    window.scrollTo({ top: 0 })
+  const addFiles = async (files: File[]) => {
+    const newClips = await Promise.all(files.map(fileToClip))
+    setClips((existing) => [...existing, ...newClips])
+    setPlan(null)
+    setRenderStatus('idle')
   }
 
-  const goHome = () => {
-    setActiveVideo(null)
-    window.scrollTo({ top: 0 })
+  const handleLoadSamples = async () => {
+    setLoadingSamples(true)
+    try {
+      const samples = await loadSampleFootage()
+      setClips((existing) => [...existing, ...samples])
+      setPlan(null)
+      setRenderStatus('idle')
+    } catch (error) {
+      setPlanError(error instanceof Error ? error.message : 'Failed to load sample footage.')
+    } finally {
+      setLoadingSamples(false)
+    }
+  }
+
+  const removeClip = (id: string) => {
+    setClips((existing) => existing.filter((clip) => clip.id !== id))
+    setPlan(null)
+    setRenderStatus('idle')
+  }
+
+  const generatePlan = async () => {
+    setThinking(true)
+    setPlanError(null)
+    setPlan(null)
+    setRenderStatus('idle')
+    try {
+      const newPlan = await director.createEditPlan({ clips, prompt })
+      setPlan(newPlan)
+      requestAnimationFrame(() => planSection.current?.scrollIntoView({ behavior: 'smooth' }))
+    } catch (error) {
+      setPlanError(error instanceof Error ? error.message : 'Failed to plan the edit.')
+    } finally {
+      setThinking(false)
+    }
+  }
+
+  const startRender = async () => {
+    if (!plan) return
+    setRenderStatus('rendering')
+    setRenderError(null)
+    if (outputUrl) {
+      URL.revokeObjectURL(outputUrl)
+      setOutputUrl(null)
+    }
+    try {
+      const blob = await renderPlan(plan, clips, setProgress)
+      setOutputUrl(URL.createObjectURL(blob))
+      setRenderStatus('done')
+    } catch (error) {
+      setRenderError(error instanceof Error ? error.message : 'Render failed.')
+      setRenderStatus('error')
+    }
   }
 
   return (
     <div className="app">
-      <Header
-        searchQuery={searchQuery}
-        onSearchChange={(query) => {
-          setSearchQuery(query)
-          setActiveVideo(null)
-        }}
-        onHome={goHome}
-      />
+      <Header />
       <main className="app__content">
-        {activeVideo ? (
-          <VideoPlayer
-            video={activeVideo}
-            relatedVideos={relatedVideos}
-            onSelect={openVideo}
-            onBack={goHome}
+        <section className="step">
+          <h2 className="step__title">
+            <span className="step__number">1</span> Add raw footage
+          </h2>
+          <UploadZone onFiles={addFiles} onLoadSamples={handleLoadSamples} loadingSamples={loadingSamples} />
+          <ClipList clips={clips} onRemove={removeClip} />
+        </section>
+
+        <section className={`step${clips.length === 0 ? ' step--disabled' : ''}`}>
+          <h2 className="step__title">
+            <span className="step__number">2</span> Describe the video you want
+          </h2>
+          <PromptPanel
+            prompt={prompt}
+            onPromptChange={setPrompt}
+            onGenerate={generatePlan}
+            disabled={clips.length === 0}
+            thinking={thinking}
           />
-        ) : (
-          <>
-            <CategoryFilter selected={category} onSelect={setCategory} />
-            <VideoGrid videos={filteredVideos} onSelect={openVideo} />
-          </>
+          {planError && <p className="step__error">{planError}</p>}
+        </section>
+
+        {plan && (
+          <section className="step" ref={planSection}>
+            <h2 className="step__title">
+              <span className="step__number">3</span> Review the edit plan
+            </h2>
+            <PlanView plan={plan} clips={clips} directorName={director.name} />
+
+            <h2 className="step__title step__title--spaced">
+              <span className="step__number">4</span> Render
+            </h2>
+            <RenderPanel
+              status={renderStatus}
+              progress={progress}
+              outputUrl={outputUrl}
+              error={renderError}
+              onRender={startRender}
+            />
+          </section>
         )}
       </main>
     </div>

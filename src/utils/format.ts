@@ -1,17 +1,13 @@
-export function formatViews(views: number): string {
-  if (views >= 1_000_000) {
-    return `${(views / 1_000_000).toFixed(1).replace(/\.0$/, '')}M views`
-  }
-  if (views >= 1_000) {
-    return `${Math.round(views / 1_000)}K views`
-  }
-  return `${views} views`
+export function formatSeconds(seconds: number | null): string {
+  if (seconds === null || !Number.isFinite(seconds)) return '–:––'
+  const total = Math.round(seconds)
+  const mins = Math.floor(total / 60)
+  const secs = total % 60
+  return `${mins}:${String(secs).padStart(2, '0')}`
 }
 
-export function formatDate(isoDate: string): string {
-  return new Date(isoDate).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+export function formatBytes(bytes: number): string {
+  if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`
+  if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`
+  return `${Math.max(1, Math.round(bytes / 1_000))} KB`
 }

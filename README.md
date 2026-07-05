@@ -1,14 +1,37 @@
-# VideoApp
+# VideoApp — AI Video Editor
 
-A video streaming web app built with React, TypeScript, and Vite. Browse a library of videos, filter by category, search by title/channel/description, and watch with a full playback page including related "up next" suggestions.
+Upload raw footage, describe the video you want in plain language, and the app edits your clips into a finished video — entirely in the browser.
 
-## Features
+```
+raw clips  →  "make a fast 30s highlight reel"  →  edit plan  →  rendered video
+```
 
-- **Video library** — responsive thumbnail grid of the full catalog
-- **Search** — live filtering across titles, channels, and descriptions
-- **Category filters** — Fractals, Generative, Test Patterns
-- **Playback page** — HTML5 video player with metadata, description, and related videos
-- **Responsive design** — works on desktop and mobile
+## How it works
+
+1. **Add footage** — drag & drop video files (MP4, WebM, MOV), or click *Load sample footage* to try it with the bundled demo clips.
+2. **Describe the edit** — e.g. *"Make a fast-paced 30 second highlight reel titled "Summer 2026" with punchy colors"*. The director understands:
+   - **length** — "30 seconds", "2 minutes"
+   - **pacing** — "fast", "punchy", "calm", "cinematic"
+   - **format** — "vertical", "9:16", "TikTok", "Instagram reel", "square"
+   - **style** — "cinematic" (letterbox), "black and white", "punchy/vibrant" (color grade)
+   - **speed** — "slow motion", "timelapse"
+   - **structure** — "montage" (intercut clips), "shuffle", chronological by default
+   - **title** — `titled "…"` renders an opening title card
+3. **Review the plan** — the director explains its choices and shows the cut timeline, color-coded by source clip.
+4. **Render** — ffmpeg.wasm executes the edit plan client-side and produces a downloadable WebM. Your footage never leaves the browser.
+
+## The AI director
+
+The edit-planning brain is defined by one interface (`EditDirector` in `src/types.ts`):
+
+```ts
+interface EditDirector {
+  name: string
+  createEditPlan(request: EditRequest): Promise<EditPlan>
+}
+```
+
+The current implementation (`src/director/heuristic.ts`) is an **offline heuristic mock**: it parses the prompt with keyword rules, selects segments spread across the footage, and writes up its reasoning. When an Anthropic API key is available, a Claude-backed director — which can additionally *look at* sampled frames to pick the best moments — implements the same interface and drops in without changing the UI or renderer.
 
 ## Getting started
 
@@ -32,16 +55,17 @@ Then open the printed local URL (default `http://localhost:5173`).
 
 ```
 src/
-  components/     UI components (Header, VideoCard, VideoGrid, VideoPlayer, CategoryFilter)
-  data/           Video catalog metadata
-  utils/          Formatting helpers
-  types.ts        Shared types
-  App.tsx         App shell, search/filter/playback state
+  director/       Edit-planning AI (heuristic mock behind the EditDirector interface)
+  render/         ffmpeg.wasm engine: filtergraph builder, title cards, renderer
+  components/     UI: UploadZone, ClipList, PromptPanel, PlanView, RenderPanel
+  utils/          Clip metadata/thumbnails, formatting helpers
+  types.ts        Clip, EditPlan, EditDirector, and friends
 public/
-  videos/         Sample videos (procedurally generated, see below)
-  thumbs/         Thumbnails extracted from the videos
+  videos/         Bundled sample footage (procedurally generated with ffmpeg)
 ```
 
-## Sample media
+## Notes
 
-The catalog is fully self-contained: every video is procedurally generated with ffmpeg's `lavfi` sources (Mandelbrot zooms, Conway's Game of Life, Rule 110, plasma, animated gradients, and broadcast test patterns), and thumbnails are extracted from the videos themselves. No external media hosts are required — the app works completely offline.
+- Rendering uses single-threaded ffmpeg.wasm (~32 MB, loaded once on first render). Short clips render in seconds; long footage takes proportionally longer.
+- Source audio is carried into the edit when every selected clip has an audio track; otherwise the render falls back to video-only.
+- The bundled sample clips are procedurally generated (fractals, cellular automata, gradients), so the repo is fully self-contained and works offline.
